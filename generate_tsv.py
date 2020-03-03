@@ -1,16 +1,11 @@
 import pandas as pd
-
-SAMPLE_ID_TO_CATEGORY = {
-    'H9-D20': 'H9',
-    'H9-D285': 'H9',
-    '102-D20': 'Patient',	
-    '102-D285': 'Patient',
-    '106-D20': 'Patient',
-    '106-D100': 'Patient'
-}
+import sys
 
 def main():
-    df = pd.read_csv('./raw_data/raw_data.tsv', sep='\t')
+    in_f = sys.argv[1]
+    out_f = sys.argv[2]
+
+    df = pd.read_csv(in_f, sep='\t')
     df = df[[
         'Geneid', 
         'H9-D20',   
@@ -21,10 +16,7 @@ def main():
         '106-D100'
     ]]
     df.set_index('Geneid')
-    df.to_csv('./data/data.tsv', sep='\t')
-
-    
-    
+    df.to_csv(out_f, sep='\t')
 
 if __name__ == "__main__":
     main()

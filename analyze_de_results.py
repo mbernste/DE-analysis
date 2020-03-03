@@ -10,23 +10,26 @@ import upsetplot
 from upsetplot import from_contents
 import gseapy as gp
 from os.path import join
+import sys
 
 PPDE_THRESH = 0.95
 GSEA_THRESH = 0.05
 
 def main():
+    dirr = sys.argv[1]
+
     df_102 = pd.read_csv(
-        join('results', 'EBSeq_DE_102.tsv'),
+        join(dirr, 'EBSeq_DE_102.tsv'),
         index_col=0,
         sep='\t'
     )	
     df_106 = pd.read_csv(
-        join('results', 'EBSeq_DE_106.tsv'),
+        join(dirr, 'EBSeq_DE_106.tsv'),
         index_col=0,
         sep='\t'
     )
     df_h9 = pd.read_csv(
-        join('results', 'EBSeq_DE_H9.tsv'),
+        join(dirr, 'EBSeq_DE_H9.tsv'),
         index_col=0,
         sep='\t'
     )
@@ -42,20 +45,29 @@ def main():
     }
 
     # Save gene lists and fold-changes to files
-    df_102['PostFC'].sort_values(ascending=False).to_csv('results/DE_genes_102.tsv', sep='\t')
-    df_106['PostFC'].sort_values(ascending=False).to_csv('results/DE_genes_106.tsv', sep='\t')
-    df_h9['PostFC'].sort_values(ascending=False).to_csv('results/DE_genes_H9.tsv', sep='\t')
+    df_102['PostFC'].sort_values(ascending=False).to_csv(
+            join(dirr, 'DE_genes_102.tsv'), 
+            sep='\t'
+    )
+    df_106['PostFC'].sort_values(ascending=False).to_csv(
+        join(dirr, 'DE_genes_106.tsv'), 
+        sep='\t'
+    )
+    df_h9['PostFC'].sort_values(ascending=False).to_csv(
+        join(dirr, 'DE_genes_H9.tsv'), 
+        sep='\t'
+    )
 
     # Create Upset plot for DE genes
     memb = from_contents(condition_to_de_genes, id_column='gene')
     upsetplot.plot(memb, subset_size='count')
-    #plt.show()
-    plt.savefig('results/DE_upset.png', format='png')
+    plt.savefig(join(dirr, 'DE_upset.png'), format='png')
 
-    _gsea_analysis(df_h9, df_102, df_106, 'KEGG_2016')
-    _gsea_analysis(df_h9, df_102, df_106, 'GO_Biological_Process_2018')
+    _gsea_analysis(df_h9, df_102, df_106, 'KEGG_2016', dirr)
+    _gsea_analysis(df_h9, df_102, df_106, 'GO_Biological_Process_2018', dirr)
 
-def _gsea_analysis(df_h9, df_102, df_106, gene_sets):
+
+def _gsea_analysis(df_h9, df_102, df_106, gene_sets, dirr):
     # Perform GSEA
     terms_102 = _gsea(list(df_102.index), gene_sets)
     terms_106 = _gsea(list(df_106.index), gene_sets)
@@ -68,9 +80,15 @@ def _gsea_analysis(df_h9, df_102, df_106, gene_sets):
 
     # Create Upset plot for KEGG terms
     memb = from_contents(condition_to_terms, id_column='gene')
-    memb.to_csv('results/{}_GSEA.tsv'.format(gene_sets), sep='\t')
+    memb.to_csv(
+        join(dirr, '{}_GSEA.tsv'.format(gene_sets)), 
+        sep='\t'
+    )
     upsetplot.plot(memb, subset_size='count')
-    plt.savefig('results/{}_upset.png'.format(gene_sets), format='png')
+    plt.savefig(
+        join(dirr, '{}_upset.png'.format(gene_sets)), 
+        format='png'
+    )
 
 
 def _filt(df):
